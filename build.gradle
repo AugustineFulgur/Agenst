@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+group 'indi.augusttheodor.agenst'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    implementation 'org.javassist:javassist:3.28.0-GA'
+    implementation 'javax.servlet:javax.servlet-api:4.0.1'
+    implementation files("${System.getProperty('java.home')}/../lib/tools.jar")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest { //自建清单属性 我待gradle如初恋
+        attributes 'Main-Class': 'indi.augusttheodor.AgenstMain' // 替换为你的主类名
+        attributes 'Agent-Class': 'indi.augusttheodor.AgenstMain'
+        attributes 'Can-Retransform-Classes': 'true'
+        attributes 'Can-Redefine-Classes': 'true'
+        //attributes 'Premain-Class': 'indi.augusttheodor.AgenstMain'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
