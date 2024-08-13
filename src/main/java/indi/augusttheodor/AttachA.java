@@ -1,7 +1,6 @@
 package indi.augusttheodor;
 
 import com.sun.tools.attach.*;
-import sun.misc.Unsafe;
 
 import java.io.File;
 import java.io.IOException;

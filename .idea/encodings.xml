@@ -4,5 +4,11 @@
     <file url="file://$PROJECT_DIR$/src/main/java/indi/augusttheodor/AgenstMain.java" charset="GBK" />
     <file url="file://$PROJECT_DIR$/src/main/java/indi/augusttheodor/AttachA.java" charset="GBK" />
     <file url="file://$PROJECT_DIR$/src/main/java/indi/augusttheodor/TransformerA.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/main/java/indi/augusttheodor/test.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/main/java/org/apache/catalina/core/ExtendServices.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/main/java/org/apache/catalina/core/RebeyondServices.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/main/java/org/apache/catalina/core/Suo5Services.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/main/java/org/apache/catalina/core/utils/Decoder.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/main/java/org/apache/catalina/core/utils/Util.java" charset="GBK" />
   </component>
 </project>

