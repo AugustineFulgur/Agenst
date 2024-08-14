@@ -27,10 +27,8 @@ public class AttachA {
             try{
                 VirtualMachine attachV = VirtualMachine.attach(vmd); //开始附加
                 attachV.loadAgent(jarPath, args); //注入本jar到目标进程 然后它会调用agentmain
-            }catch (AttachNotSupportedException e){
+            }catch (Exception ea){
                 System.out.println(vmdName+"----------------不支持Attach！");
-            }catch (IOException e){
-                System.out.println(vmdName+"----------------这个报错应该是因为进程已经被attach过一次");
             }
 
         }
@@ -42,6 +40,7 @@ public class AttachA {
         //这个方法用于寻找注入目标
         //返回值为HashMap<ClassName,MethodName>
         //其实用HashMap不太严谨，但是这很方便
+        //如果遇见无法注入的情况就延长这个表 over！
         HashMap<String,String[]> re=new HashMap<>();
         re.put("org.apache.catalina.core.ApplicationFilterChain", new String[]{"doFilter"});
         return re;

@@ -10,10 +10,9 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
     implementation 'org.javassist:javassist:3.28.0-GA'
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
+    implementation 'commons-cli:commons-cli:1.4'
     implementation files("${System.getProperty('java.home')}/../lib/tools.jar")
 }
 
@@ -27,9 +26,13 @@ jar {
         attributes 'Agent-Class': 'indi.augusttheodor.AgenstMain'
         attributes 'Can-Retransform-Classes': 'true'
         attributes 'Can-Redefine-Classes': 'true'
-        //attributes 'Premain-Class': 'indi.augusttheodor.AgenstMain'
     }
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/LICENSE*'
+    exclude 'META-INF/NOTICE*'
 }

