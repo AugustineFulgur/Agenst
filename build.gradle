@@ -13,7 +13,10 @@ dependencies {
     implementation 'org.javassist:javassist:3.28.0-GA'
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
     implementation 'commons-cli:commons-cli:1.4'
-    implementation files("${System.getProperty('java.home')}/../lib/tools.jar")
+    //implementation files("${System.getProperty('java.home')}/../lib/tools.jar") //windows jar
+    implementation files("\\lib-linux\\tools.jar") //linux jar
+    //implementation files("\\build\\libs\\tools.jar") //windows jar
+    //是否也算一种 交叉编译？
 }
 
 test {

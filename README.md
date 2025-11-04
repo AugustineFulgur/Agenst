@@ -5,7 +5,7 @@
 
 如运行报错，考虑：
 1. 环境不正确，寻找一个jdk
-2. 缺少dll或so文件，找一个attach.dll放在加载目录下（这是java agent注入的前置条件）
+2. 缺少dll或so文件，找一个attach.dll放在加载目录下（这是java agent注入的前置条件，并且此repo里有你需要的attach.dll/libattach.so，在lib-*文件夹下）
 
 # 支持功能
 1. 支持**冰蝎**、**Neo-reg**和**自定义的内存马**，内存马访问WEB进行注入。
@@ -25,6 +25,12 @@
 ## 自定义注入路径
 1. 请在启动时使用参数-u=来指定一个路径，所有内存马路径将沿用这个路径代替字符串`agenst`如`java -jar agenst.jar -u=zhangwei`，则如冰蝎访问路径会变为/zhangweiR，以此类推（注入的filter等不沿用此规则）。
 2. 使用参数-uR=或-uE=或-uN=来分别定义三种内存马的路径，如`java -jar agenst.jar -uR=myRebeyond`，则仅有冰蝎的路径变为/myRebeyond。
+
+# 交叉编译
+
+Agenst有两个OS版本，分别对应linux和windows。
+
+编译的时候修改一下build.gradle里的注释行调用不同的jar就可以了，或者直接使用build文件夹下的成品。
 
 # Then
 Enjoy ur PenTest, have fun!
