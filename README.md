@@ -30,7 +30,18 @@
 
 Agenst有两个OS版本，分别对应linux和windows。
 
-编译的时候修改一下build.gradle里的注释行调用不同的jar就可以了，或者直接使用build文件夹下的成品。
+在2.0版本之前，编译的时候需要修改build.gradle里的注释行进行交叉编译。
+在2.0及其之后的版本你可以直接编译，两个jar会直接生成。
+
+# 支持中间件
+
+请注意，Agenst通过修改中间件函数的字节码以完成内存马注入。由于版本变动导致的包名等变动，Agenst可能会失效，但以下中间件的主流版本均已支持。**如果因为中间件版本不支持导致注入失败可以提issue，我会尽量修。**
+
+- Tomcat
+- Spring MVC
+- Jetty
+- WebLogic
+- WebSphere
 
 # Then
 Enjoy ur PenTest, have fun!

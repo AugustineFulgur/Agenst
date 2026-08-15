@@ -29,42 +29,43 @@ public class AttachA {
 
     public static void doAttach(String args) throws IOException, AgentLoadException, AgentInitializationException {
         String jarPath = AttachA.class.getProtectionDomain().getCodeSource().getLocation().getFile();
-        jarPath=new File(jarPath).getPath();
+        jarPath = new File(jarPath).getPath();
         List<VirtualMachineDescriptor> vList = VirtualMachine.list();
-        for(VirtualMachineDescriptor vmd:vList) {
+        for (VirtualMachineDescriptor vmd : vList) {
             String vmdName = vmd.displayName();
             if (vmdName.contains(new File(jarPath).getName())) {
                 continue;
             }
-            System.out.println("-------->附加到"+vmdName);
-            try{
+            System.out.println("-------->附加到" + vmdName);
+            try {
                 VirtualMachine attachV = VirtualMachine.attach(vmd);
                 attachV.loadAgent(jarPath, args);
-            }catch (Exception ea){
-                System.out.println(vmdName+"----------------不支持Attach！");
+            } catch (Exception ea) {
+                System.out.println(
+                        vmdName + "----------------不支持Attach！请注意，这一般提示当前进程已经被另一个Agent接管——有可能是RASP（一种动态安全检测工具）。");
             }
 
         }
     }
 
-    public static HashMap<String,String[]> findAttachClasses(){
-        HashMap<String,String[]> re=new HashMap<>();
-        for(Stage stage : STAGES){
+    public static HashMap<String, String[]> findAttachClasses() {
+        HashMap<String, String[]> re = new HashMap<>();
+        for (Stage stage : STAGES) {
             re.putAll(stage.getHookPoints());
         }
         return re;
     }
 
-    public static Stage getStageForClass(String className){
-        for(Stage stage : STAGES){
-            if(stage.getHookPoints().containsKey(className)){
+    public static Stage getStageForClass(String className) {
+        for (Stage stage : STAGES) {
+            if (stage.getHookPoints().containsKey(className)) {
                 return stage;
             }
         }
         return null;
     }
 
-    public static byte[] getRedefineClassBytes(){
+    public static byte[] getRedefineClassBytes() {
         return new byte[0];
     }
 }

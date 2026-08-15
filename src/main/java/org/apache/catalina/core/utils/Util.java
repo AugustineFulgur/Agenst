@@ -22,7 +22,6 @@ public class Util {
         //加载class的情况，需要先获取类名再加载
         ClassPool cp =ClassPool.getDefault();
         String cName=cp.makeClass(new ByteArrayInputStream(c)).getName();
-        System.out.println(cName); //原始！
         ClassLoader clzLoader = Thread.currentThread().getContextClassLoader();
         java.lang.reflect.Method defineClzMethod = clzLoader.loadClass("java.lang.ClassLoader").getDeclaredMethod("defineClass", String.class, byte[].class, Integer.TYPE, Integer.TYPE);
         defineClzMethod.setAccessible(true);

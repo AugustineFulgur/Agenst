@@ -44,7 +44,6 @@ public class TransformerA implements ClassFileTransformer {
             TransformerA.cp.insertClassPath(new ClassClassPath(classBeingRedefined));
         }
         try {
-            System.out.println(this.sourceCode+this.className+this.declaredMethod);
             CtClass cc=TransformerA.cp.get(this.className);
             CtMethod cm=cc.getDeclaredMethod(this.declaredMethod);
             cm.insertBefore(this.sourceCode); //插入原始代码
@@ -66,7 +65,6 @@ public class TransformerA implements ClassFileTransformer {
             return null;
         }//先检查是否初始化等
         try {
-            System.out.println(this.sourceCode+this.className+this.declaredMethod);
             CtClass cc=TransformerA.cp.get(this.className);
             CtMethod cm=cc.getDeclaredMethod(this.declaredMethod);
             cm.insertBefore(this.sourceCode); //插入原始代码
