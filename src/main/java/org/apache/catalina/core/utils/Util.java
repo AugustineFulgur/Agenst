@@ -7,22 +7,22 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 public class Util {
-    //Ãû×ÖÊÇËæ±ãÈ¡µÄ ±½ÈËÓ¢Óï²»ºÃ
-    //ÕâÁ½¸ö·½·¨Ò»¸öÓÃÓÚ·´ĞòÁĞ»¯¼ÓÔØ±ùĞ«µÄÀà£¬Ò»¸öÓÃÓÚ¼ÓÔØJMGµÄÀà ¿ÉÒÔÖ±½Ó°á×ß
+    //åå­—æ˜¯éšä¾¿å–çš„ è‹¯äººè‹±è¯­ä¸å¥½
+    //è¿™ä¸¤ä¸ªæ–¹æ³•ä¸€ä¸ªç”¨äºååºåˆ—åŒ–åŠ è½½å†°èçš„ç±»ï¼Œä¸€ä¸ªç”¨äºåŠ è½½JMGçš„ç±» å¯ä»¥ç›´æ¥æ¬èµ°
 
     public static Class extendClassLoader(byte[] c) throws NoSuchMethodException, NoSuchFieldException, IllegalAccessException, InvocationTargetException {
         java.lang.reflect.Field f = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
         java.lang.reflect.Method m=sun.misc.Unsafe.class.getDeclaredMethod("defineAnonymousClass", new Class[]{Class.class, byte[].class, Object[].class});
         f.setAccessible(true);
-        m.setAccessible(true); //È«²¿¿É·ÃÎÊ
-        return (Class)m.invoke(f.get(null),new Object[]{java.io.File.class, c, null}); //Ö´ĞĞ·½·¨ Ö÷ÒªÊÇÎªÁË²»newÒ»¸ö¶ÔÏó
+        m.setAccessible(true); //å…¨éƒ¨å¯è®¿é—®
+        return (Class)m.invoke(f.get(null),new Object[]{java.io.File.class, c, null}); //æ‰§è¡Œæ–¹æ³• ä¸»è¦æ˜¯ä¸ºäº†ä¸newä¸€ä¸ªå¯¹è±¡
     }
 
     public static Class abstractClassLoader(byte[] c) throws NoSuchMethodException, SecurityException, ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException, IOException {
-        //¼ÓÔØclassµÄÇé¿ö£¬ĞèÒªÏÈ»ñÈ¡ÀàÃûÔÙ¼ÓÔØ
+        //åŠ è½½classçš„æƒ…å†µï¼Œéœ€è¦å…ˆè·å–ç±»åå†åŠ è½½
         ClassPool cp =ClassPool.getDefault();
         String cName=cp.makeClass(new ByteArrayInputStream(c)).getName();
-        System.out.println(cName); //Ô­Ê¼£¡
+        System.out.println(cName); //åŸå§‹ï¼
         ClassLoader clzLoader = Thread.currentThread().getContextClassLoader();
         java.lang.reflect.Method defineClzMethod = clzLoader.loadClass("java.lang.ClassLoader").getDeclaredMethod("defineClass", String.class, byte[].class, Integer.TYPE, Integer.TYPE);
         defineClzMethod.setAccessible(true);

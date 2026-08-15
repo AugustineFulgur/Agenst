@@ -8,7 +8,7 @@ import java.util.Objects;
 
 import javassist.*;
 
-//×Ô¶¨ÒåTransformer£¬¸²Ğ´sourceCodeµ½declaredMethod
+//è‡ªå®šä¹‰Transformerï¼Œè¦†å†™sourceCodeåˆ°declaredMethod
 public class TransformerA implements ClassFileTransformer {
     public String declaredMethod="";
     public String className="";
@@ -16,7 +16,7 @@ public class TransformerA implements ClassFileTransformer {
     public static ClassPool cp=null;
 
     public static void init(){
-        //³õÊ¼»¯
+        //åˆå§‹åŒ–
         TransformerA.cp=ClassPool.getDefault();
         TransformerA.cp.appendClassPath(new LoaderClassPath(Thread.currentThread().getContextClassLoader()));
     }
@@ -32,22 +32,22 @@ public class TransformerA implements ClassFileTransformer {
 
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-        //Ö»ÄÜËµ²¢²»ÍêÈ«ÊÊÓÃ
+        //åªèƒ½è¯´å¹¶ä¸å®Œå…¨é€‚ç”¨
         if(TransformerA.cp==null){
             TransformerA.init();
         }
         if(Objects.equals(this.declaredMethod, "") || Objects.equals(this.className, "") || Objects.equals(this.sourceCode, "")){
             return null;
-        }//ÏÈ¼ì²éÊÇ·ñ³õÊ¼»¯µÈ
+        }//å…ˆæ£€æŸ¥æ˜¯å¦åˆå§‹åŒ–ç­‰
         if(classBeingRedefined!=null){
-            //ÓĞÖØ¶¨ÒåÒ²²å½øÀ´
+            //æœ‰é‡å®šä¹‰ä¹Ÿæ’è¿›æ¥
             TransformerA.cp.insertClassPath(new ClassClassPath(classBeingRedefined));
         }
         try {
             System.out.println(this.sourceCode+this.className+this.declaredMethod);
             CtClass cc=TransformerA.cp.get(this.className);
             CtMethod cm=cc.getDeclaredMethod(this.declaredMethod);
-            cm.insertBefore(this.sourceCode); //²åÈëÔ­Ê¼´úÂë
+            cm.insertBefore(this.sourceCode); //æ’å…¥åŸå§‹ä»£ç 
             byte[] b=cc.toBytecode();
             cc.detach();
             return b;
@@ -57,19 +57,19 @@ public class TransformerA implements ClassFileTransformer {
     }
 
     public byte[] getBytes(Class redefined){
-        //Ö»ÄÜËµ²¢²»ÍêÈ«ÊÊÓÃ
+        //åªèƒ½è¯´å¹¶ä¸å®Œå…¨é€‚ç”¨
         if(TransformerA.cp==null){
             TransformerA.init();
         }
         TransformerA.cp.insertClassPath(new ClassClassPath(redefined));
         if(Objects.equals(this.declaredMethod, "") || Objects.equals(this.className, "") || Objects.equals(this.sourceCode, "")){
             return null;
-        }//ÏÈ¼ì²éÊÇ·ñ³õÊ¼»¯µÈ
+        }//å…ˆæ£€æŸ¥æ˜¯å¦åˆå§‹åŒ–ç­‰
         try {
             System.out.println(this.sourceCode+this.className+this.declaredMethod);
             CtClass cc=TransformerA.cp.get(this.className);
             CtMethod cm=cc.getDeclaredMethod(this.declaredMethod);
-            cm.insertBefore(this.sourceCode); //²åÈëÔ­Ê¼´úÂë
+            cm.insertBefore(this.sourceCode); //æ’å…¥åŸå§‹ä»£ç 
             byte[] b=cc.toBytecode();
             cc.detach();
             return b;

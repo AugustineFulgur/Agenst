@@ -1,49 +1,67 @@
 package indi.augusttheodor;
 
 import com.sun.tools.attach.*;
+import indi.augusttheodor.stage.JettyStage;
+import indi.augusttheodor.stage.Stage;
+import indi.augusttheodor.stage.TomcatStage;
+import indi.augusttheodor.stage.WebLogicStage;
+import indi.augusttheodor.stage.WebSphereStage;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-//Õâ¸ö¹¤¾ßÀàÓÃÀ´»ñÈ¡JVM²¢Attach
-//Èç¹ûÓĞÈË¿´µ½ÕâÀï£¬ÕâÀïËùÊ¹ÓÃµÄµÄcom.sun.toolsÔÚjava/libs/tools.jarÄÚ
-//Í¨¹ıÕâ¸ö·½Ê½Ã¶¾ÙJVM£¬ÊÇÎÒ¼û¹ıµÄ±È½Ï³£ÓÃµÄ·½·¨ Java×ÜÊÇÃæÃæ¾ãµ½£¬Á¬Âñ×Ô¼ºµÄ·ØÒ²ÌáÇ°ÍÚºÃÁË
 public class AttachA {
 
+    private static final List<Stage> STAGES = new ArrayList<>();
+    static {
+        STAGES.add(new TomcatStage());
+        STAGES.add(new WebLogicStage());
+        STAGES.add(new WebSphereStage());
+        STAGES.add(new JettyStage());
+    }
+
+    public static List<Stage> getStages() {
+        return STAGES;
+    }
+
     public static void doAttach(String args) throws IOException, AgentLoadException, AgentInitializationException {
-        //Õâ¸ö·½·¨½«×ÔÉí×¢ÈëËùÓĞJVM
         String jarPath = AttachA.class.getProtectionDomain().getCodeSource().getLocation().getFile();
         jarPath=new File(jarPath).getPath();
-        List<VirtualMachineDescriptor> vList = VirtualMachine.list(); //»ñÈ¡JVMÁĞ±í
+        List<VirtualMachineDescriptor> vList = VirtualMachine.list();
         for(VirtualMachineDescriptor vmd:vList) {
             String vmdName = vmd.displayName();
-            if (vmdName.contains(new File(jarPath).getName())) { //·ÀÖ¹¸ÄÃû£¬ÕâÀïÓÃ¶¯Ì¬»ñÈ¡µÄÃû×Ö
-                continue; //ÅÅ³ı×Ô¼º
+            if (vmdName.contains(new File(jarPath).getName())) {
+                continue;
             }
-            System.out.println("-------->¸½¼Óµ½"+vmdName);
+            System.out.println("-------->é™„åŠ åˆ°"+vmdName);
             try{
-                VirtualMachine attachV = VirtualMachine.attach(vmd); //¿ªÊ¼¸½¼Ó
-                attachV.loadAgent(jarPath, args); //×¢Èë±¾jarµ½Ä¿±ê½ø³Ì È»ºóËü»áµ÷ÓÃagentmain
+                VirtualMachine attachV = VirtualMachine.attach(vmd);
+                attachV.loadAgent(jarPath, args);
             }catch (Exception ea){
-                System.out.println(vmdName+"----------------²»Ö§³ÖAttach£¡");
+                System.out.println(vmdName+"----------------ä¸æ”¯æŒAttachï¼");
             }
 
         }
     }
 
-    
-
     public static HashMap<String,String[]> findAttachClasses(){
-        //Õâ¸ö·½·¨ÓÃÓÚÑ°ÕÒ×¢ÈëÄ¿±ê
-        //·µ»ØÖµÎªHashMap<ClassName,MethodName>
-        //ÆäÊµÓÃHashMap²»Ì«ÑÏ½÷£¬µ«ÊÇÕâºÜ·½±ã
-        //Èç¹ûÓö¼ûÎŞ·¨×¢ÈëµÄÇé¿ö¾ÍÑÓ³¤Õâ¸ö±í over£¡
         HashMap<String,String[]> re=new HashMap<>();
-        re.put("org.apache.catalina.core.ApplicationFilterChain", new String[]{"doFilter"});
+        for(Stage stage : STAGES){
+            re.putAll(stage.getHookPoints());
+        }
         return re;
+    }
+
+    public static Stage getStageForClass(String className){
+        for(Stage stage : STAGES){
+            if(stage.getHookPoints().containsKey(className)){
+                return stage;
+            }
+        }
+        return null;
     }
 
     public static byte[] getRedefineClassBytes(){

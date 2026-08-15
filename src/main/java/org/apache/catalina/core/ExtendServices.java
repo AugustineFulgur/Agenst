@@ -7,7 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class ExtendServices {
-    //ÎÒ×Ü¾õµÃÓĞ¸ö½Ó¿Ú¸üºÃ ¼ø¶¨ÎªjavaĞ´¶àÁË
+    //æˆ‘æ€»è§‰å¾—æœ‰ä¸ªæ¥å£æ›´å¥½ é‰´å®šä¸ºjavaå†™å¤šäº†
     public static String SERVICE_URL="agenstE";
 
     public static void doServices(java.util.Map rdd,Object obj) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException, ClassNotFoundException {

