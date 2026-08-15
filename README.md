@@ -19,7 +19,9 @@
 
 ## 自定义校验
 请在启动时使用参数-a=来指定一个请求头，格式为A:B。
+
 如`java -jar agenst.jar -a=Referer:123456`（请求头与值请使用小写）。
+
 此时所有路由都将开启校验。
 
 ## 自定义注入路径
@@ -30,7 +32,10 @@
 
 Agenst有两个OS版本，分别对应linux和windows。
 
+为适配JRE环境，默认编译配置会打包jdk/bin/tools.jar下的一些内容。工程文件中自带的tools.jar是从JDK1.8中拿到的，如果需要在其它版本下编译请注意替换。
+
 在2.0版本之前，编译的时候需要修改build.gradle里的注释行进行交叉编译。
+
 在2.0及其之后的版本你可以直接编译，两个jar会直接生成。
 
 # 支持中间件
@@ -42,6 +47,7 @@ Agenst有两个OS版本，分别对应linux和windows。
 - Jetty
 - WebLogic
 - WebSphere
+- JBoss
 
 # Then
 Enjoy ur PenTest, have fun!
