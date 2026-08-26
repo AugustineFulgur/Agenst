@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'indi.augusttheodor.agenst'
@@ -10,11 +11,9 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.javassist:javassist:3.28.0-GA'
-    implementation 'commons-cli:commons-cli:1.4'
+    implementation 'org.javassist:javassist:3.30.2-GA'
 }
 
-// 为两个 OS 分别创建配置，用于编译和打包对应平台的 tools.jar 类
 configurations {
     windowsTools
     linuxTools
@@ -27,54 +26,25 @@ dependencies {
 
 compileJava {
     options.encoding = 'UTF-8'
+    options.release = 8
     classpath = configurations.compileClasspath + configurations.windowsTools
 }
 
-jar {
-    archiveClassifier = 'windows'
-    manifest {
-        attributes 'Main-Class': 'indi.augusttheodor.AgenstMain'
-        attributes 'Agent-Class': 'indi.augusttheodor.AgenstMain'
-        attributes 'Can-Retransform-Classes': 'true'
-        attributes 'Can-Redefine-Classes': 'true'
-    }
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    // 只打包 attach 所需的类，避免把整个 tools.jar（JDI/javac 等）塞进去
-    from {
-        zipTree(configurations.windowsTools.singleFile).matching {
-            include 'com/sun/tools/attach/**'
-        }
-    }
-    exclude 'META-INF/*.SF'
-    exclude 'META-INF/*.DSA'
-    exclude 'META-INF/*.RSA'
-    exclude 'META-INF/LICENSE*'
-    exclude 'META-INF/NOTICE*'
-    exclude 'javax/servlet/**'
-    exclude 'jakarta/servlet/**'
-    exclude 'META-INF/maven/javax.servlet/**'
-    exclude 'META-INF/maven/jakarta.servlet/**'
-}
-
-// 交叉编译 Linux 版本
 task compileLinux(type: JavaCompile) {
     source = sourceSets.main.java
     classpath = configurations.compileClasspath + configurations.linuxTools
     destinationDirectory = file("${buildDir}/classes/linux")
     options.encoding = 'UTF-8'
+    options.release = 8
 }
 
-task jarLinux(type: Jar) {
-    dependsOn compileLinux
-    archiveClassifier = 'linux'
-    from compileLinux.destinationDirectory
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+shadowJar {
+    archiveClassifier = 'windows'
+    relocate 'javassist', 'indi.augusttheodor.shaded.javassist'
     from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    from {
-        zipTree(configurations.linuxTools.singleFile).matching {
+        zipTree(project.configurations.windowsTools.singleFile).matching {
             include 'com/sun/tools/attach/**'
         }
     }
@@ -95,7 +65,37 @@ task jarLinux(type: Jar) {
     exclude 'META-INF/maven/jakarta.servlet/**'
 }
 
-assemble.dependsOn jarLinux
+task shadowLinux(type: ShadowJar, dependsOn: compileLinux) {
+    archiveClassifier = 'linux'
+    from compileLinux.destinationDirectory
+    setConfigurations([project.configurations.runtimeClasspath])
+    relocate 'javassist', 'indi.augusttheodor.shaded.javassist'
+    from {
+        zipTree(project.configurations.linuxTools.singleFile).matching {
+            include 'com/sun/tools/attach/**'
+        }
+    }
+    manifest {
+        attributes 'Main-Class': 'indi.augusttheodor.AgenstMain'
+        attributes 'Agent-Class': 'indi.augusttheodor.AgenstMain'
+        attributes 'Can-Retransform-Classes': 'true'
+        attributes 'Can-Redefine-Classes': 'true'
+    }
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/LICENSE*'
+    exclude 'META-INF/NOTICE*'
+    exclude 'javax/servlet/**'
+    exclude 'jakarta/servlet/**'
+    exclude 'META-INF/maven/javax.servlet/**'
+    exclude 'META-INF/maven/jakarta.servlet/**'
+}
+
+jar.enabled = false
+
+assemble.dependsOn shadowJar
+assemble.dependsOn shadowLinux
 
 test {
     useJUnitPlatform()
