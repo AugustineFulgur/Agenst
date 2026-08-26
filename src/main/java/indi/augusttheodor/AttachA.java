@@ -1,6 +1,9 @@
 package indi.augusttheodor;
 
-import com.sun.tools.attach.*;
+import com.sun.tools.attach.AgentInitializationException;
+import com.sun.tools.attach.AgentLoadException;
+import com.sun.tools.attach.VirtualMachine;
+import com.sun.tools.attach.VirtualMachineDescriptor;
 import indi.augusttheodor.stage.JettyStage;
 import indi.augusttheodor.stage.Stage;
 import indi.augusttheodor.stage.TomcatStage;
@@ -10,7 +13,6 @@ import indi.augusttheodor.stage.WebSphereStage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class AttachA {
@@ -40,32 +42,13 @@ public class AttachA {
             try {
                 VirtualMachine attachV = VirtualMachine.attach(vmd);
                 attachV.loadAgent(jarPath, args);
+            } catch (AgentInitializationException e) {
+                System.out.println(vmdName + " ---- agent 已附加但注入失败(" + e + ")，详见目标进程 stdout");
+            } catch (AgentLoadException e) {
+                System.out.println(vmdName + " ---- agent 加载失败(" + e + ")");
             } catch (Exception ea) {
-                System.out.println(
-                        vmdName + "----------------不支持Attach！请注意，这一般提示当前进程已经被另一个Agent接管——有可能是RASP（一种动态安全检测工具）。");
-            }
-
-        }
-    }
-
-    public static HashMap<String, String[]> findAttachClasses() {
-        HashMap<String, String[]> re = new HashMap<>();
-        for (Stage stage : STAGES) {
-            re.putAll(stage.getHookPoints());
-        }
-        return re;
-    }
-
-    public static Stage getStageForClass(String className) {
-        for (Stage stage : STAGES) {
-            if (stage.getHookPoints().containsKey(className)) {
-                return stage;
+                System.out.println(vmdName + " ---- 不支持 Attach(" + ea + ")！注意：这通常提示当前进程已被另一个 Agent 接管（可能是 RASP）");
             }
         }
-        return null;
-    }
-
-    public static byte[] getRedefineClassBytes() {
-        return new byte[0];
     }
 }
