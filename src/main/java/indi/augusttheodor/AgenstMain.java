@@ -1,78 +1,111 @@
 package indi.augusttheodor;
 
-import com.sun.tools.attach.AgentInitializationException;
-import com.sun.tools.attach.AgentLoadException;
+import indi.augusttheodor.stage.Stage;
+import org.apache.catalina.core.ExtendServices;
+import org.apache.catalina.core.NeoServices;
+import org.apache.catalina.core.RebeyondServices;
 
-import java.io.IOException;
+import java.lang.instrument.Instrumentation;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class AgenstMain {
 
-    public static void main(String[] args){
-        //SB VSCODE 天天 吞我编码
-        //我的注释！
-        try{
-            String edit="";
-            for(String a:args){
-                edit+=a;
-                edit+="\n";
+    public static void main(String[] args) {
+        try {
+            String edit = "";
+            for (String a : args) {
+                edit += a;
+                edit += "\n";
             }
             AttachA.doAttach(edit);
         } catch (Exception e) {
             System.out.println("[错误] Agenst 运行失败：" + e.getMessage());
             e.printStackTrace();
-            throw new RuntimeException(e);  //不打算处理但依然写了
+            throw new RuntimeException(e);
         }
-
     }
 
-    public static void agentmain(String agentArgs, java.lang.instrument.Instrumentation ins) throws Exception {
-        //这个方法作为agent时的入口 谁重载
-        Options cmd=new Options(agentArgs);
-        if(cmd.hasOption("u")){
-            org.apache.catalina.core.ExtendServices.SERVICE_URL=cmd.getOptionValue("u")+"E";
-            org.apache.catalina.core.RebeyondServices.SERVICE_URL=cmd.getOptionValue("u")+"R";
-            org.apache.catalina.core.NeoServices.SERVICE_URL=cmd.getOptionValue("u")+"N";
-        }
-        if(cmd.hasOption("uR")){
-            //使用的时候别为难自己了大哥们
-            org.apache.catalina.core.RebeyondServices.SERVICE_URL=cmd.getOptionValue("uR");
-        }
-        if(cmd.hasOption("uN")){
-            org.apache.catalina.core.NeoServices.SERVICE_URL=cmd.getOptionValue("uN");
-        }
-        if(cmd.hasOption("uE")){
-            org.apache.catalina.core.ExtendServices.SERVICE_URL=cmd.getOptionValue("uE");
-        }
-        java.util.List<indi.augusttheodor.stage.Stage> stages = AttachA.getStages();
-        for(indi.augusttheodor.stage.Stage stage : stages){
-            stage.configure(cmd);
-        }
-        TransformerA.init();
-        java.util.HashMap<String, String[]> hm = AttachA.findAttachClasses(); //懒得写注释了，要怪请怪VSCODE
-        Class[] classes = ins.getAllLoadedClasses();
-        //枚举所有已加载类，然后检查我们的注入器中是否包含这些
-        for (Class c : classes) {
-            if (hm.containsKey(c.getName())) {
-                //如果包含呢，那就使用Transformer对其字节码进行注入
-                indi.augusttheodor.stage.Stage stage = AttachA.getStageForClass(c.getName());
-                if(stage == null){
-                    continue;
-                }
-                for(String mN : hm.get(c.getName())){ //遍历列表取出所有要注入的方法
-                    TransformerA tA = new TransformerA(mN,c.getName());
-                    tA.setSourceCode(stage.getInjectedSource(c.getName(), mN, cmd)); //前置，在被注入环境内获取所有需要的内容，然后进入agent环境
-                    try {
-                        java.lang.instrument.ClassDefinition cd=new java.lang.instrument.ClassDefinition(c, tA.getBytes(c));
-                        ins.redefineClasses(cd);
-                    } catch (java.lang.instrument.UnmodifiableClassException e) {
-                        System.out.println(mN+"------"+c.getName()+"------"+"不可注入！");
-                    } catch (ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
+    public static void agentmain(String agentArgs, Instrumentation ins) throws Exception {
+        Options cmd = new Options(agentArgs);
+        applyUrlOptions(cmd);
+        for (Stage stage : AttachA.getStages()) {
+            try {
+                stage.configure(cmd);
+            } catch (Throwable e) {
+                System.out.println("[agenst] " + stage.getName() + " 配置失败: " + e);
             }
         }
+
+        System.out.println("[agenst] target jdk = " + System.getProperty("java.version"));
+
+        Set<String> loaded = new HashSet<>();
+        for (Class<?> c : ins.getAllLoadedClasses()) {
+            loaded.add(c.getName());
+        }
+
+        Map<String, OneShotTransformer.Target> targets = new HashMap<>();
+        for (Stage stage : AttachA.getStages()) {
+            try {
+                if (!stage.isPresent(loaded)) {
+                    continue;
+                }
+                for (Map.Entry<String, String[]> e : stage.getHookPoints().entrySet()) {
+                    targets.put(e.getKey(), new OneShotTransformer.Target(
+                            e.getValue(), stage.getInjectedSource(e.getKey(), e.getValue()[0], cmd)));
+                }
+            } catch (Throwable e) {
+                System.out.println("[agenst] " + stage.getName() + " 准备失败: " + e);
+            }
+        }
+
+        if (targets.isEmpty()) {
+            System.out.println("[agenst] 未探测到受支持中间件，退出");
+            return;
+        }
+
+        for (String name : targets.keySet()) {
+            System.out.println("[agenst] target class = " + name);
+        }
+
+        OneShotTransformer.bind(ins);
+        OneShotTransformer t = new OneShotTransformer(targets);
+        ins.addTransformer(t, true);
+
+        for (Class<?> c : ins.getAllLoadedClasses()) {
+            if (targets.containsKey(c.getName())) {
+                try {
+                    ins.retransformClasses(c);
+                    System.out.println("[agenst] injected = " + c.getName());
+                } catch (Throwable e) {
+                    System.out.println("[agenst] " + c.getName() + " 注入失败: " + e);
+                }
+            }
+        }
+
+        if (t.isSettled()) {
+            t.unregister();
+        } else {
+            t.armReaper(60_000);
+        }
     }
 
+    private static void applyUrlOptions(Options cmd) {
+        if (cmd.hasOption("u")) {
+            ExtendServices.SERVICE_URL = cmd.getOptionValue("u") + "E";
+            RebeyondServices.SERVICE_URL = cmd.getOptionValue("u") + "R";
+            NeoServices.SERVICE_URL = cmd.getOptionValue("u") + "N";
+        }
+        if (cmd.hasOption("uR")) {
+            RebeyondServices.SERVICE_URL = cmd.getOptionValue("uR");
+        }
+        if (cmd.hasOption("uN")) {
+            NeoServices.SERVICE_URL = cmd.getOptionValue("uN");
+        }
+        if (cmd.hasOption("uE")) {
+            ExtendServices.SERVICE_URL = cmd.getOptionValue("uE");
+        }
+    }
 }

